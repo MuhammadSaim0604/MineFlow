@@ -37,7 +37,7 @@ function ProtectedRoute({ component: Component, requirePin = true }: { component
   useEffect(() => {
     if (!token) {
       setLocation("/login");
-    } else if (requirePin && !isLoading && pinStatus && !pinStatus.hasPin && location !== "/set-wallet-pin") {
+    } else if (requirePin && !isLoading && pinStatus && !pinStatus.hasPin && location !== "/set-wallet-pin" && !window.location.search.includes('needsUsernameSetup')) {
       setLocation("/set-wallet-pin");
     }
   }, [token, setLocation, requirePin, isLoading, pinStatus, location]);
@@ -167,12 +167,16 @@ function Router() {
 
 function AppContent() {
   const [showConsent, setShowConsent] = useState(false);
-  const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const isAuthPage = location === "/login" || location === "/signup";
   const isSetPinPage = location === "/set-wallet-pin";
   const token = localStorage.getItem("authToken");
+
+  const { data: pinStatus } = useQuery<{ hasPin: boolean }>({
+    queryKey: ["/api/wallet/has-pin"],
+    enabled: !!token,
+  });
 
   useEffect(() => {
     const consent = localStorage.getItem("consent");
@@ -180,18 +184,6 @@ function AppContent() {
       setShowConsent(true);
     }
   }, []);
-
-  // Check if username needs to be set, especially after Google OAuth
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const needsUsernameSetup = urlParams.get('needsUsernameSetup');
-    if (needsUsernameSetup === 'true') {
-      setShowUsernameSetup(true);
-      // Clean up the URL to prevent re-showing the modal
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
-
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/me"],
@@ -227,9 +219,11 @@ function AppContent() {
   };
 
   const handleUsernameSetupComplete = () => {
-    setShowUsernameSetup(false);
-    // Potentially redirect or update UI after username setup
+    // No-op or cleanup handled by parent
   };
+
+  const hideHeaderPages = ["/notifications", "/history", "/wallet", "/settings", "/profile"];
+  const showHeader = !hideHeaderPages.includes(location);
 
   if (isAuthPage || isSetPinPage) {
     return (
@@ -244,43 +238,45 @@ function AppContent() {
     <TooltipProvider>
       <div className="flex flex-col h-screen w-full">
         <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} user={user} />
-        <header className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-1 hover:bg-muted rounded-md transition-colors"
-              data-testid="button-menu"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <h1 className="text-xl font-bold">MineOS</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setLocation("/notifications")}
-              className={`relative flex items-center justify-center transition-colors ${
-                location === "/notifications" ? "text-primary" : "text-muted-foreground"
-              }`}
-              data-testid="button-notifications-header"
-            >
-              <Bell className="w-6 h-6" />
-              {notifications.filter(n => !n.isRead).length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground rounded-full flex items-center justify-center border-2 border-background">
-                  {notifications.filter(n => !n.isRead).length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setLocation("/profile")}
-              className={`flex items-center justify-center transition-colors ${
-                location === "/profile" ? "text-primary" : "text-muted-foreground"
-              }`}
-              data-testid="button-profile-header"
-            >
-              <User className="w-6 h-6" />
-            </button>
-          </div>
-        </header>
+        {showHeader && (
+          <header className="flex items-center justify-between p-4 border-b border-border bg-background sticky top-0 z-40">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-1 hover:bg-muted rounded-md transition-colors"
+                data-testid="button-menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <h1 className="text-xl font-bold">MineOS</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setLocation("/notifications")}
+                className={`relative flex items-center justify-center transition-colors ${
+                  location === "/notifications" ? "text-primary" : "text-muted-foreground"
+                }`}
+                data-testid="button-notifications-header"
+              >
+                <Bell className="w-6 h-6" />
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[10px] font-bold text-primary-foreground rounded-full flex items-center justify-center border-2 border-background">
+                    {notifications.filter(n => !n.isRead).length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setLocation("/profile")}
+                className={`flex items-center justify-center transition-colors ${
+                  location === "/profile" ? "text-primary" : "text-muted-foreground"
+                }`}
+                data-testid="button-profile-header"
+              >
+                <User className="w-6 h-6" />
+              </button>
+            </div>
+          </header>
+        )}
         <main className="flex-1 overflow-auto pb-20">
           <Router />
         </main>
@@ -314,7 +310,7 @@ function App() {
       if (needsUsernameSetup === 'true') {
         setShowUsernameSetup(true);
         // Clean up URL by redirecting to dashboard without query params
-        window.history.replaceState({}, '', '/');
+        window.history.replaceState({}, '', '/?needsUsernameSetup=true');
       } else {
         // Clean up URL by redirecting to dashboard
         window.history.replaceState({}, '', '/');
@@ -332,29 +328,54 @@ function App() {
     setIsLoading(false);
   }, [setLocation]); // Added setLocation to dependency array
 
-
-  const handleUsernameSetupComplete = () => {
-    setShowUsernameSetup(false);
-    // After username setup is complete, ensure we navigate to the dashboard
-    // if the user was initially redirected here by the OAuth flow.
-    // If they were already on a different page, they should remain there.
-    if (window.location.pathname === '/' && !window.location.search) {
-        setLocation('/');
-    }
-  };
-
   if (isLoading) {
     return <SplashScreen onComplete={() => setIsLoading(false)} />;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AppWrapper 
+        showUsernameSetup={showUsernameSetup} 
+        setShowUsernameSetup={setShowUsernameSetup} 
+      />
+    </QueryClientProvider>
+  );
+}
+
+function AppWrapper({ 
+  showUsernameSetup, 
+  setShowUsernameSetup 
+}: { 
+  showUsernameSetup: boolean; 
+  setShowUsernameSetup: (show: boolean) => void;
+}) {
+  const [, setLocation] = useLocation();
+  
+  const { data: pinStatus } = useQuery<{ hasPin: boolean }>({
+    queryKey: ["/api/wallet/has-pin"],
+    enabled: !!localStorage.getItem("authToken"),
+  });
+
+  const handleUsernameSetupComplete = () => {
+    setShowUsernameSetup(false);
+    window.history.replaceState({}, '', '/');
+    
+    // Redirect to PIN setup only if they don't have one
+    if (pinStatus && !pinStatus.hasPin) {
+      setLocation('/set-wallet-pin');
+    } else {
+      setLocation('/');
+    }
+  };
+
+  return (
+    <>
       <AppContent />
       <ReferralCodeSetup
         open={showUsernameSetup}
         onComplete={handleUsernameSetupComplete}
       />
-    </QueryClientProvider>
+    </>
   );
 }
 

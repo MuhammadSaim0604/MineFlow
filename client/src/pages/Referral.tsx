@@ -44,7 +44,7 @@ export default function Referral() {
         <p className="text-muted-foreground">Invite friends and get 10% of their mining earnings forever!</p>
       </div>
 
-      <Card className="p-6 space-y-4 shadow-none border-dashed border-2">
+      <Card className="p-6 space-y-4 shadow-none border-none bg-primary/5">
         <div className="space-y-4">
           <div className="text-center space-y-1">
             <p className="text-sm font-medium text-muted-foreground">Your Referral Code</p>
@@ -85,7 +85,7 @@ export default function Referral() {
       <div className="space-y-4">
         <h2 className="font-bold text-lg">My Referrals</h2>
         {referrals.length === 0 ? (
-          <Card className="p-8 text-center bg-muted/10 border-dashed shadow-none">
+        <Card className="p-8 text-center bg-muted/20 border-none shadow-none">
             <p className="text-muted-foreground text-sm">No referrals yet. Start inviting!</p>
           </Card>
         ) : (

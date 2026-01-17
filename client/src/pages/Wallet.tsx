@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowUpRight, ArrowDownRight, Copy, QrCode, Wallet as WalletIcon, History, Eye, EyeOff, Send } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Copy, QrCode, Wallet as WalletIcon, History, Eye, EyeOff, Send, ArrowLeft } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { VerifyPinDialog } from "@/components/VerifyPinDialog";
 import type { Transaction } from "@shared/schema";
@@ -15,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 
 export default function Wallet() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [sendAmount, setSendAmount] = useState("");
   const [sendRecipient, setSendRecipient] = useState("");
   const [showBalance, setShowBalance] = useState(false);
@@ -132,13 +134,23 @@ export default function Wallet() {
 
   return (
     <div className="min-h-screen bg-background p-4 space-y-6 max-w-md mx-auto pb-24">
-      <div className="mb-2">
-        <h1 className="text-2xl font-bold text-foreground" data-testid="text-wallet-title">Wallet</h1>
-        <p className="text-sm text-muted-foreground">Manage your crypto assets</p>
+      <div className="mb-2 flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLocation("/")}
+          className="h-8 w-8"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground" data-testid="text-wallet-title">Wallet</h1>
+          <p className="text-sm text-muted-foreground">Manage your crypto assets</p>
+        </div>
       </div>
 
       {/* Balance Card */}
-      <Card className="p-6 bg-primary/5 border-primary/20 shadow-none">
+      <Card className="p-6 bg-primary/10 border-none shadow-none">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">Total Balance</p>
           <div className="flex items-center gap-3">
@@ -184,7 +196,7 @@ export default function Wallet() {
         </TabsList>
 
         <TabsContent value="send" className="space-y-4 mt-4">
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-4 shadow-none border-none bg-card">
             <div className="space-y-2">
               <Label htmlFor="sendRecipient">Recipient</Label>
               <Input
@@ -232,7 +244,7 @@ export default function Wallet() {
         </TabsContent>
 
         <TabsContent value="receive" className="space-y-4 mt-4">
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-4 shadow-none border-none bg-card">
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 bg-white rounded-xl">
                 <QrCode className="w-32 h-32 text-black" />
@@ -263,7 +275,7 @@ export default function Wallet() {
       </Tabs>
 
       {/* Transaction History */}
-      <Card className="p-6 space-y-4">
+      <Card className="p-6 space-y-4 shadow-none border-none bg-card">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">Transaction History</h3>
           <History className="w-5 h-5 text-muted-foreground" />

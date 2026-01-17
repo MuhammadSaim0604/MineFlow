@@ -51,7 +51,7 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-background max-w-md mx-auto flex flex-col h-full">
       <div className="p-4 border-b border-border flex items-center gap-4 bg-background sticky top-0 z-10">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/")}>
+        <Button variant="ghost" size="icon" onClick={() => setLocation("/")} className="h-8 w-8">
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-xl font-bold flex-1">Notifications</h1>

@@ -1,4 +1,3 @@
-
 import { HistoryList } from "@/components/HistoryList";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -12,21 +11,31 @@ export default function History() {
   });
 
   // Calculate statistics
-  const totalEarnings = sessions.reduce((acc: number, session: any) => {
-    const earnings = parseFloat(session.earnings || "0");
-    return acc + earnings;
-  }, 0).toFixed(8);
+  const totalEarnings = sessions
+    .reduce((acc: number, session: any) => {
+      const earnings = parseFloat(session.earnings || "0");
+      return acc + earnings;
+    }, 0)
+    .toFixed(8);
 
   const totalDuration = sessions.reduce((acc: number, session: any) => {
-    const duration = parseInt(session.duration) || 0;
-    return acc + duration;
+    let duration = 0;
+    if (session.duration) {
+      duration = parseInt(session.duration);
+    } else if (session.startTime && session.endTime) {
+      const start = new Date(session.startTime).getTime();
+      const end = new Date(session.endTime).getTime();
+      duration =
+        Math.floor((end - start) / 1000) - (session.pausedDuration || 0);
+    }
+    return acc + Math.max(0, duration);
   }, 0);
 
   const formatTotalDuration = (seconds: number) => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
-    
+
     if (days > 0) {
       return `${days}d ${hours}h`;
     } else if (hours > 0) {
@@ -35,8 +44,12 @@ export default function History() {
     return `${mins}m`;
   };
 
-  const activeSessions = sessions.filter((s: any) => s.status === "active" || s.status === "paused").length;
-  const completedSessions = sessions.filter((s: any) => s.status === "stopped").length;
+  const activeSessions = sessions.filter(
+    (s: any) => s.status === "active" || s.status === "paused",
+  ).length;
+  const completedSessions = sessions.filter(
+    (s: any) => s.status === "stopped",
+  ).length;
   const totalSessions = sessions.length;
 
   if (isLoading) {
@@ -44,7 +57,9 @@ export default function History() {
       <div className="min-h-screen bg-background p-4 max-w-md mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">Mining History</h1>
-          <p className="text-sm text-muted-foreground">View all your mining sessions</p>
+          <p className="text-sm text-muted-foreground">
+            View all your mining sessions
+          </p>
         </div>
         <div className="animate-pulse space-y-3">
           <div className="h-32 bg-muted rounded-xl" />
@@ -69,7 +84,9 @@ export default function History() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Mining History</h1>
-          <p className="text-sm text-muted-foreground">Track your mining performance</p>
+          <p className="text-sm text-muted-foreground">
+            Track your mining performance
+          </p>
         </div>
       </div>
 
@@ -101,9 +118,7 @@ export default function History() {
             <div className="text-sm font-semibold text-foreground">
               {formatTotalDuration(totalDuration)}
             </div>
-            <div className="text-xs text-muted-foreground">
-              Mining time
-            </div>
+            <div className="text-xs text-muted-foreground">Mining time</div>
           </div>
         </Card>
 
@@ -120,12 +135,18 @@ export default function History() {
             </div>
             <div className="flex gap-1 flex-wrap">
               {activeSessions > 0 && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-chart-2/20 text-chart-2">
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-1.5 py-0 bg-chart-2/20 text-chart-2"
+                >
                   {activeSessions} active
                 </Badge>
               )}
               {completedSessions > 0 && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-muted text-muted-foreground">
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-1.5 py-0 bg-muted text-muted-foreground"
+                >
                   {completedSessions} done
                 </Badge>
               )}

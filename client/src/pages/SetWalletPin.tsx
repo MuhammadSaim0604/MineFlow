@@ -25,8 +25,13 @@ export default function SetWalletPin() {
         description: "Your wallet is now secured",
       });
       
-      // Navigate immediately
-      setLocation("/");
+      // Check if we were in the middle of a setup flow
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('setup') === 'true') {
+        setLocation("/");
+      } else {
+        setLocation("/");
+      }
     },
     onError: (error: any) => {
       toast({

@@ -14,7 +14,6 @@ export default function Dashboard() {
     gpuUtilization: 0,
     hashRate: 0,
     temperature: 35,
-    powerDraw: 0,
     networkLatency: 45,
   });
 
@@ -23,6 +22,7 @@ export default function Dashboard() {
     duration,
     sessionEarnings,
     projectedDaily,
+    intensity = 50, // Default intensity
     isLoading: isMiningLoading,
     handleStart,
     handlePause,
@@ -47,28 +47,42 @@ export default function Dashboard() {
     
     if (status === "active") {
       interval = setInterval(() => {
+        // Smart algorithm to simulate realistic load based on intensity
+        const baseCPU = 10 + (intensity * 0.7);
+        const baseGPU = intensity * 0.9;
+        const baseHash = intensity * 4.5;
+        const baseTemp = 40 + (intensity * 0.35);
+
         setAnalytics({
-          cpuUtilization: Math.min(95, 60 + Math.random() * 20),
-          gpuUtilization: Math.min(98, 75 + Math.random() * 15),
-          hashRate: 450 + Math.random() * 100,
-          temperature: Math.min(82, 55 + Math.random() * 15),
-          powerDraw: Math.min(350, 250 + Math.random() * 80),
-          networkLatency: 35 + Math.random() * 20,
+          cpuUtilization: Math.min(99.9, baseCPU + (Math.random() * 5 - 2.5)),
+          gpuUtilization: Math.min(99.9, baseGPU + (Math.random() * 3 - 1.5)),
+          hashRate: baseHash + (Math.random() * 20 - 10),
+          temperature: baseTemp + (Math.random() * 2 - 1),
+          networkLatency: 35 + Math.random() * 15,
         });
       }, 1000);
-    } else {
-      setAnalytics({
-        cpuUtilization: 5 + Math.random() * 10,
+    } else if (status === "paused") {
+      setAnalytics(prev => ({
+        ...prev,
+        cpuUtilization: 15 + Math.random() * 5,
         gpuUtilization: 0,
         hashRate: 0,
-        temperature: 35 + Math.random() * 5,
-        powerDraw: 45 + Math.random() * 15,
-        networkLatency: 45 + Math.random() * 10,
+        temperature: Math.max(35, prev.temperature - 0.5), // Gradually cool down
+        networkLatency: 40 + Math.random() * 5,
+      }));
+    } else {
+      // Idle or Cooldown - Reset to base levels
+      setAnalytics({
+        cpuUtilization: 0,
+        gpuUtilization: 0,
+        hashRate: 0,
+        temperature: 0,
+        networkLatency: 0,
       });
     }
 
     return () => clearInterval(interval);
-  }, [status]);
+  }, [status, intensity]);
 
   if (isLoadingBalance || isLoadingTransactions || isMiningLoading) {
     return (
@@ -134,18 +148,10 @@ export default function Dashboard() {
         <AnalyticsTile
           icon={Thermometer}
           label="Temperature"
-          value={Math.round(analytics.temperature)}
+          value={status === "active" ? Math.round(analytics.temperature) : "0"}
           unit="°C"
           color={analytics.temperature > 75 ? "text-chart-3" : "text-chart-4"}
           trend={analytics.temperature > 75 ? "up" : "stable"}
-        />
-        <AnalyticsTile
-          icon={Zap}
-          label="Power Draw"
-          value={Math.round(analytics.powerDraw)}
-          unit="W"
-          color="text-chart-3"
-          trend={status === "active" ? "up" : "down"}
         />
         <AnalyticsTile
           icon={Network}
@@ -153,6 +159,30 @@ export default function Dashboard() {
           value={Math.round(analytics.networkLatency)}
           unit="ms"
           color="text-chart-5"
+          trend="stable"
+        />
+        <AnalyticsTile
+          icon={Activity}
+          label="Uptime"
+          value={status === "active" ? "99.9" : "0"}
+          unit="%"
+          color="text-blue-500"
+          trend="stable"
+        />
+        <AnalyticsTile
+          icon={Zap}
+          label="Efficiency"
+          value={status === "active" ? (0.85 + Math.random() * 0.1).toFixed(2) : "0.00"}
+          unit="MH/W"
+          color="text-yellow-500"
+          trend="stable"
+        />
+        <AnalyticsTile
+          icon={Network}
+          label="Nodes"
+          value={status === "active" ? "12" : "0"}
+          unit=""
+          color="text-purple-500"
           trend="stable"
         />
       </div>

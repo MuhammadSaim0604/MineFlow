@@ -10,7 +10,7 @@ interface IncomeCardProps {
 
 export function IncomeCard({ balance, sessionEarnings, projectedDaily, percentageChange = 0 }: IncomeCardProps) {
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="p-6 bg-card text-card-foreground shadow-none border-none rounded-2xl">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Total Balance</h3>
         <Coins className="w-5 h-5 text-primary" />

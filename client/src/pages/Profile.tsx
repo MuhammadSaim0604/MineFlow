@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
@@ -41,9 +43,19 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background p-6 max-w-md mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-        <p className="text-sm text-muted-foreground">Manage your account settings</p>
+      <div className="mb-6 flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLocation("/")}
+          className="h-8 w-8"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+          <p className="text-sm text-muted-foreground">Manage your account settings</p>
+        </div>
       </div>
 
       <ProfilePanel user={user} />

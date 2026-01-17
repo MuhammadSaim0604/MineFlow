@@ -47,6 +47,10 @@ export function useMining() {
     retry: 3,
   });
 
+  const { data: settings, isLoading: isLoadingSettings } = useQuery<any>({
+    queryKey: ["/api/settings"],
+  });
+
   // Start session mutation
   const startSessionMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/sessions/start", {}),
@@ -398,7 +402,8 @@ export function useMining() {
     duration: currentDuration,
     sessionEarnings,
     projectedDaily,
-    isLoading,
+    intensity: settings?.intensity || 50,
+    isLoading: isLoading || isLoadingSettings,
     handleStart,
     handlePause,
     handleStop,

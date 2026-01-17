@@ -11,10 +11,12 @@ interface Session {
   id: string;
   startTime: string;
   endTime: string | null;
-  duration: number;
+  duration?: number;
+  pausedDuration?: number;
   earnings: string;
   status: string;
-  hashRate: string;
+  intensity?: number;
+  hashRate?: string;
 }
 
 interface HistoryListProps {
@@ -30,10 +32,21 @@ export function HistoryList({ sessions }: HistoryListProps) {
   );
 
   const formatDuration = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0m";
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     if (hours > 0) return `${hours}h ${mins}m`;
     return `${mins}m`;
+  };
+
+  const calculateSessionDuration = (session: Session) => {
+    if (session.duration) return session.duration;
+    if (!session.endTime) return 0;
+    
+    const start = new Date(session.startTime).getTime();
+    const end = new Date(session.endTime).getTime();
+    const totalSeconds = Math.floor((end - start) / 1000);
+    return Math.max(0, totalSeconds - (session.pausedDuration || 0));
   };
 
   const getStatusColor = (status: string) => {
@@ -53,7 +66,7 @@ export function HistoryList({ sessions }: HistoryListProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
+      <Card className="p-4 bg-muted/30 border-none">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -86,54 +99,54 @@ export function HistoryList({ sessions }: HistoryListProps) {
             filteredSessions.map((session) => (
               <Card 
                 key={session.id} 
-                className="p-4 hover-elevate transition-all cursor-pointer"
+                className="p-3 sm:p-4 hover-elevate transition-all cursor-pointer w-full"
                 data-testid={`session-${session.id}`}
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Cpu className="w-5 h-5 text-primary" />
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-row items-start justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
+                        <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-foreground truncate">
-                            Session {session.id.slice(0, 8)}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5">
+                          <span className="text-xs sm:text-sm font-medium text-foreground truncate">
+                            S-{session.id.slice(0, 8)}
                           </span>
-                          <Badge className={getStatusColor(session.status)} variant="secondary">
+                          <Badge className={`${getStatusColor(session.status)} text-[9px] sm:text-xs px-1 sm:px-2 py-0`} variant="secondary">
                             {session.status}
                           </Badge>
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-[10px] sm:text-xs text-muted-foreground truncate">
                           {formatDistanceToNow(new Date(session.startTime), { addSuffix: true })}
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="text-lg font-mono font-semibold text-chart-2">
+                    <div className="text-right shrink-0">
+                      <div className="text-sm sm:text-lg font-mono font-semibold text-chart-2 whitespace-nowrap">
                         +{session.earnings}
                       </div>
-                      <div className="text-xs text-muted-foreground">BTC</div>
+                      <div className="text-[9px] sm:text-xs text-muted-foreground uppercase">BTC</div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <div className="space-y-0.5">
-                        <div className="text-xs text-muted-foreground">Duration</div>
-                        <div className="text-sm font-medium text-foreground">
-                          {formatDuration(session.duration)}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-3 border-t border-border">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[9px] sm:text-xs text-muted-foreground truncate uppercase tracking-tighter">Duration</div>
+                        <div className="text-[11px] sm:text-sm font-medium text-foreground truncate">
+                          {formatDuration(calculateSessionDuration(session))}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-muted-foreground" />
-                      <div className="space-y-0.5">
-                        <div className="text-xs text-muted-foreground">Hash Rate</div>
-                        <div className="text-sm font-medium text-foreground">
-                          {session.hashRate} MH/s
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[9px] sm:text-xs text-muted-foreground truncate uppercase tracking-tighter">Hash Rate</div>
+                        <div className="text-[11px] sm:text-sm font-medium text-foreground truncate">
+                          {session.intensity ? (session.intensity * 0.45).toFixed(2) : "0.00"} MH/s
                         </div>
                       </div>
                     </div>

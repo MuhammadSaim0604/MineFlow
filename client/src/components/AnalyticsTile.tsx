@@ -24,7 +24,7 @@ export function AnalyticsTile({ icon: Icon, label, value, unit, color = "text-pr
   }, [value, displayValue]);
 
   return (
-    <Card className="p-4 flex flex-col gap-3 hover-elevate" data-testid={`tile-${label.toLowerCase().replace(/\s/g, '-')}`}>
+    <Card className="p-4 flex flex-col gap-3 shadow-none border-none bg-card rounded-2xl" data-testid={`tile-${label.toLowerCase().replace(/\s/g, '-')}`}>
       <div className="flex items-center justify-between">
         <Icon className={`w-5 h-5 ${color}`} />
         {trend && (
