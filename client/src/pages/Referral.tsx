@@ -23,7 +23,7 @@ export default function Referral() {
   });
 
   const referralCode = user?.referralCode || "LOADING...";
-  const referralLink = `${window.location.origin}/signup?code=${referralCode}`;
+  const referralLink = `https://mineos-landing-page.onrender.com/register/?ref_code=${referralCode}`;
 
   const copyToClipboard = (text: string, description: string) => {
     if (referralCode === "LOADING...") return;

@@ -114,8 +114,7 @@ function Router() {
       localStorage.setItem('authToken', token);
       localStorage.setItem('userId', userId);
       
-      const params = new URLSearchParams(window.location.search);
-      const needsUsernameSetup = params.get('needsUsernameSetup');
+      const needsUsernameSetup = urlParams.get('needsUsernameSetup');
       
       if (needsUsernameSetup === 'true') {
         window.history.replaceState({}, document.title, "/?needsUsernameSetup=true");
