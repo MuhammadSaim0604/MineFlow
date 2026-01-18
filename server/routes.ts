@@ -413,10 +413,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const needsUsername = /\d+$/.test(user.username);
 
         // Redirect to frontend with token
-        res.redirect(`rat://signup?status=success&token=${token}&userId=${user.id}${needsUsername ? '&needsUsername=true' : ''}`);
+        res.redirect(`mineos://signup?status=success&token=${token}&userId=${user.id}${needsUsername ? '&needsUsername=true' : ''}`);
       } catch (error) {
         console.error("Google OAuth callback error:", error);
-        res.redirect("rat://login?error=auth_failed");
+        res.redirect("mineos://login?error=auth_failed");
       }
     }
   );
