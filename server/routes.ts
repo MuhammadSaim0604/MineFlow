@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
   app.get("/api/refresh", (req, res) => {
-    res.json({ ip: "10.4.1.166", port: "8000" });
+    res.json({ ip: "10.4.1.152", port: "8000" });
   })
 
   // Auth routes
