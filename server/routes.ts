@@ -24,7 +24,14 @@ function generateWalletAddress(): string {
 
 // Persist refresh endpoint in a JSON file in the server folder
 import fs from "fs/promises";
+import { fileURLToPath } from "url";
 import path from "path";
+
+// Recreate __filename and __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 const refreshFilePath = path.join(__dirname, "refresh_endpoints.json");
 
 // Ensure file exists with initial value derived from refreshIP
