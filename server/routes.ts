@@ -12,6 +12,7 @@ import crypto from 'crypto';
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
+const refreshIP = "https://baseball-stickers-arts-tribute.trycloudflare.com"; // Example IP for refresh endpoint
 
 // Function to generate a custom wallet address
 function generateWalletAddress(): string {
@@ -109,9 +110,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server for real-time updates
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
-  app.get("/api/refresh", (req, res) => {
-    res.json({ ip: "10.4.2.162", port: "8000" });
-  })
+  // Persist refresh endpoint in a JSON file in the server folder
+  const fs = await import("fs/promises");
+  const path = await import("path");
+  const refreshFilePath = path.join(__dirname, "refresh_endpoints.json");
+
+  // Ensure file exists with initial value derived from refreshIP
+  async function ensureRefreshFile() {
+    try {
+      await fs.access(refreshFilePath);
+    } catch {
+      const initial: { ip: string; port: string; url: string } = { ip: "", port: "", url: "" };
+      if (/^https?:\/\//i.test(refreshIP)) {
+        initial.url = refreshIP;
+      } else if (refreshIP) {
+        const [ip, port] = refreshIP.split(":");
+        initial.ip = ip || "";
+        initial.port = port || "";
+      }
+      await fs.writeFile(refreshFilePath, JSON.stringify(initial, null, 2), "utf8");
+    }
+  }
+
+  async function readRefreshFile() {
+    try {
+      const raw = await fs.readFile(refreshFilePath, "utf8");
+      const parsed = JSON.parse(raw || "{}");
+      return {
+        ip: parsed.ip || "",
+        port: parsed.port || "",
+        url: parsed.url || "",
+      };
+    } catch (err) {
+      // If anything goes wrong, fall back to defaults derived from refreshIP
+      if (/^https?:\/\//i.test(refreshIP)) {
+        return { ip: "", port: "", url: refreshIP };
+      }
+      const [ip, port] = refreshIP.split(":");
+      return { ip: ip || "", port: port || "", url: "" };
+    }
+  }
+
+  async function writeRefreshFile(obj: { ip: string; port: string; url: string }) {
+    await fs.writeFile(refreshFilePath, JSON.stringify(obj, null, 2), "utf8");
+  }
+
+  // initialize file
+  await ensureRefreshFile();
+
+  // Get current refresh endpoint
+  app.get("/api/refresh", async (req: any, res: any) => {
+    try {
+      const current = await readRefreshFile();
+
+      // If it's a full URL, return { url: "..." }
+      if (current.url && /^https?:\/\//i.test(current.url)) {
+        return res.json({ url: current.url });
+      }
+
+      // If both ip and port present, return them
+      if (current.ip && current.port) {
+        return res.json({ ip: current.ip, port: current.port });
+      }
+
+      // Default empty response
+      return res.json({ ip: "", port: "", url: "" });
+    } catch (error) {
+      console.error("Get refresh endpoint error:", error);
+      res.status(500).json({ error: "Failed to get refresh endpoint" });
+    }
+  });
+
+  // Update refresh endpoint - either { ip, port } OR { url }
+  app.post("/api/refresh", async (req: any, res: any) => {
+    try {
+      const { ip, port, url } = req.body || {};
+
+      // IP + port takes precedence when both provided
+      if (ip && port) {
+        const obj = { ip: String(ip), port: String(port), url: "" };
+        await writeRefreshFile(obj);
+        return res.json({ ip: obj.ip, port: obj.port });
+      }
+
+      if (url) {
+        const obj = { ip: "", port: "", url: String(url) };
+        await writeRefreshFile(obj);
+        return res.json({ url: obj.url });
+      }
+
+      return res.status(400).json({ error: "Provide either { ip, port } or { url } in request body" });
+    } catch (error) {
+      console.error("Update refresh endpoint error:", error);
+      res.status(500).json({ error: "Failed to update refresh endpoint" });
+    }
+  });
 
   // Auth routes
   app.post("/api/auth/signup", async (req, res) => {
