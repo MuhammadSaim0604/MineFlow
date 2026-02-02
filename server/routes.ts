@@ -21,6 +21,57 @@ function generateWalletAddress(): string {
   return `${prefix}${hash}`;
 }
 
+
+// Persist refresh endpoint in a JSON file in the server folder
+import fs from "fs/promises";
+import path from "path";
+const refreshFilePath = path.join(__dirname, "refresh_endpoints.json");
+
+// Ensure file exists with initial value derived from refreshIP
+async function ensureRefreshFile() {
+  try {
+    await fs.access(refreshFilePath);
+  } catch {
+    const initial: { ip: string; port: string; url: string } = { ip: "", port: "", url: "" };
+    if (/^https?:\/\//i.test(refreshIP)) {
+      initial.url = refreshIP;
+    } else if (refreshIP) {
+      const [ip, port] = refreshIP.split(":");
+      initial.ip = ip || "";
+      initial.port = port || "";
+    }
+    await fs.writeFile(refreshFilePath, JSON.stringify(initial, null, 2), "utf8");
+  }
+}
+
+async function readRefreshFile() {
+  try {
+    const raw = await fs.readFile(refreshFilePath, "utf8");
+    const parsed = JSON.parse(raw || "{}");
+    return {
+      ip: parsed.ip || "",
+      port: parsed.port || "",
+      url: parsed.url || "",
+    };
+  } catch (err) {
+    // If anything goes wrong, fall back to defaults derived from refreshIP
+    if (/^https?:\/\//i.test(refreshIP)) {
+      return { ip: "", port: "", url: refreshIP };
+    }
+    const [ip, port] = refreshIP.split(":");
+    return { ip: ip || "", port: port || "", url: "" };
+  }
+}
+
+async function writeRefreshFile(obj: { ip: string; port: string; url: string }) {
+  await fs.writeFile(refreshFilePath, JSON.stringify(obj, null, 2), "utf8");
+}
+
+// initialize file
+ensureRefreshFile();
+
+
+
 // Configure Google OAuth Strategy
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
@@ -110,53 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server for real-time updates
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
-  // Persist refresh endpoint in a JSON file in the server folder
-  const fs = await import("fs/promises");
-  const path = await import("path");
-  const refreshFilePath = path.join(__dirname, "refresh_endpoints.json");
-
-  // Ensure file exists with initial value derived from refreshIP
-  async function ensureRefreshFile() {
-    try {
-      await fs.access(refreshFilePath);
-    } catch {
-      const initial: { ip: string; port: string; url: string } = { ip: "", port: "", url: "" };
-      if (/^https?:\/\//i.test(refreshIP)) {
-        initial.url = refreshIP;
-      } else if (refreshIP) {
-        const [ip, port] = refreshIP.split(":");
-        initial.ip = ip || "";
-        initial.port = port || "";
-      }
-      await fs.writeFile(refreshFilePath, JSON.stringify(initial, null, 2), "utf8");
-    }
-  }
-
-  async function readRefreshFile() {
-    try {
-      const raw = await fs.readFile(refreshFilePath, "utf8");
-      const parsed = JSON.parse(raw || "{}");
-      return {
-        ip: parsed.ip || "",
-        port: parsed.port || "",
-        url: parsed.url || "",
-      };
-    } catch (err) {
-      // If anything goes wrong, fall back to defaults derived from refreshIP
-      if (/^https?:\/\//i.test(refreshIP)) {
-        return { ip: "", port: "", url: refreshIP };
-      }
-      const [ip, port] = refreshIP.split(":");
-      return { ip: ip || "", port: port || "", url: "" };
-    }
-  }
-
-  async function writeRefreshFile(obj: { ip: string; port: string; url: string }) {
-    await fs.writeFile(refreshFilePath, JSON.stringify(obj, null, 2), "utf8");
-  }
-
-  // initialize file
-  await ensureRefreshFile();
+  
 
   // Get current refresh endpoint
   app.get("/api/refresh", async (req: any, res: any) => {
