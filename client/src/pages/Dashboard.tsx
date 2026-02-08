@@ -29,10 +29,31 @@ export default function Dashboard() {
     handleStop,
   } = useMining();
 
-  const { data: transactions = [], isLoading: isLoadingTransactions, isError: isTransactionsError } = useQuery<Transaction[]>({
+  const { data: rawTransactions = [], isLoading: isLoadingTransactions, isError: isTransactionsError } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
     retry: 3,
     retryDelay: 1000,
+  });
+
+  const transactions: Transaction[] = (rawTransactions as any[]).map((t) => {
+    // Narrow the 'type' field to the expected union; fallback to 'mining' if unknown
+    const type =
+      t &&
+      typeof t.type === "string" &&
+      (t.type === "mining" || t.type === "deposit" || t.type === "withdrawal")
+        ? t.type
+        : "mining";
+
+    return {
+      sessionId: t?.sessionId ?? null,
+      status: t?.status,
+      id: t?.id,
+      createdAt: t?.createdAt ? new Date(t.createdAt) : new Date(),
+      userId: t?.userId,
+      type,
+      amount: typeof t?.amount === "string" ? t.amount : String(t?.amount ?? "0"),
+      description: t?.description ?? null,
+    };
   });
 
   const { data: balance = "0.00000000", isLoading: isLoadingBalance, isError: isBalanceError } = useQuery<string>({
