@@ -9,13 +9,13 @@ import { useMining } from "@/hooks/useMining";
 import type { Transaction } from "@shared/schema";
 
 export default function Dashboard() {
-  const [analytics, setAnalytics] = useState({
-    cpuUtilization: 0,
-    gpuUtilization: 0,
-    hashRate: 0,
-    temperature: 35,
-    networkLatency: 45,
-  });
+  // const [analytics, setAnalytics] = useState({
+  //   cpuUtilization: 0,
+  //   gpuUtilization: 0,
+  //   hashRate: 0,
+  //   temperature: 35,
+  //   networkLatency: 45,
+  // });
 
   const {
     status,
@@ -41,48 +41,48 @@ export default function Dashboard() {
     retryDelay: 1000,
   });
 
-  // Update analytics based on mining status
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
+  // // Update analytics based on mining status
+  // useEffect(() => {
+  //   let interval: NodeJS.Timeout;
     
-    if (status === "active") {
-      interval = setInterval(() => {
-        // Smart algorithm to simulate realistic load based on intensity
-        const baseCPU = 10 + (intensity * 0.7);
-        const baseGPU = intensity * 0.9;
-        const baseHash = intensity * 4.5;
-        const baseTemp = 40 + (intensity * 0.35);
+  //   if (status === "active") {
+  //     interval = setInterval(() => {
+  //       // Smart algorithm to simulate realistic load based on intensity
+  //       const baseCPU = 10 + (intensity * 0.7);
+  //       const baseGPU = intensity * 0.9;
+  //       const baseHash = intensity * 4.5;
+  //       const baseTemp = 40 + (intensity * 0.35);
 
-        setAnalytics({
-          cpuUtilization: Math.min(99.9, baseCPU + (Math.random() * 5 - 2.5)),
-          gpuUtilization: Math.min(99.9, baseGPU + (Math.random() * 3 - 1.5)),
-          hashRate: baseHash + (Math.random() * 20 - 10),
-          temperature: baseTemp + (Math.random() * 2 - 1),
-          networkLatency: 35 + Math.random() * 15,
-        });
-      }, 1000);
-    } else if (status === "paused") {
-      setAnalytics(prev => ({
-        ...prev,
-        cpuUtilization: 15 + Math.random() * 5,
-        gpuUtilization: 0,
-        hashRate: 0,
-        temperature: Math.max(35, prev.temperature - 0.5), // Gradually cool down
-        networkLatency: 40 + Math.random() * 5,
-      }));
-    } else {
-      // Idle or Cooldown - Reset to base levels
-      setAnalytics({
-        cpuUtilization: 0,
-        gpuUtilization: 0,
-        hashRate: 0,
-        temperature: 0,
-        networkLatency: 0,
-      });
-    }
+  //       setAnalytics({
+  //         cpuUtilization: Math.min(99.9, baseCPU + (Math.random() * 5 - 2.5)),
+  //         gpuUtilization: Math.min(99.9, baseGPU + (Math.random() * 3 - 1.5)),
+  //         hashRate: baseHash + (Math.random() * 20 - 10),
+  //         temperature: baseTemp + (Math.random() * 2 - 1),
+  //         networkLatency: 35 + Math.random() * 15,
+  //       });
+  //     }, 1000);
+  //   } else if (status === "paused") {
+  //     setAnalytics(prev => ({
+  //       ...prev,
+  //       cpuUtilization: 15 + Math.random() * 5,
+  //       gpuUtilization: 0,
+  //       hashRate: 0,
+  //       temperature: Math.max(35, prev.temperature - 0.5), // Gradually cool down
+  //       networkLatency: 40 + Math.random() * 5,
+  //     }));
+  //   } else {
+  //     // Idle or Cooldown - Reset to base levels
+  //     setAnalytics({
+  //       cpuUtilization: 0,
+  //       gpuUtilization: 0,
+  //       hashRate: 0,
+  //       temperature: 0,
+  //       networkLatency: 0,
+  //     });
+  //   }
 
-    return () => clearInterval(interval);
-  }, [status, intensity]);
+  //   return () => clearInterval(interval);
+  // }, [status, intensity]);
 
   if (isLoadingBalance || isLoadingTransactions || isMiningLoading) {
     return (
@@ -120,7 +120,7 @@ export default function Dashboard() {
         percentageChange={status === "active" ? 12.5 : 0}
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* <div className="grid grid-cols-2 gap-3">
         <AnalyticsTile
           icon={Cpu}
           label="CPU Usage"
@@ -185,7 +185,7 @@ export default function Dashboard() {
           color="text-purple-500"
           trend="stable"
         />
-      </div>
+      </div> */}
 
       <TransactionList transactions={transactions} />
     </div>
