@@ -189,6 +189,23 @@ function AppContent() {
     enabled: !!token && !isAuthPage,
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: { referralCode: string }) => apiRequest("POST", "/api/auth/update-profile", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      localStorage.removeItem("pendingReferralCode");
+    },
+  });
+
+  useEffect(() => {
+    if (user && !user.referredBy) {
+      const pendingCode = localStorage.getItem("pendingReferralCode");
+      if (pendingCode) {
+        updateProfileMutation.mutate({ referralCode: pendingCode });
+      }
+    }
+  }, [user]);
+
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["/api/notifications"],
     refetchInterval: 5000,

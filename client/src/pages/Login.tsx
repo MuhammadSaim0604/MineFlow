@@ -22,6 +22,15 @@ export default function Login() {
     onSuccess: (data) => {
       localStorage.setItem("authToken", data.token);
       localStorage.setItem("userId", data.userId);
+
+       
+      // Store pending referral code if exists in URL
+      const params = new URLSearchParams(window.location.search);
+      const referralCode = params.get("code");
+      if (referralCode) {
+        localStorage.setItem("pendingReferralCode", referralCode);
+      }
+
       toast({
         title: "Welcome back!",
         description: "Successfully logged in",

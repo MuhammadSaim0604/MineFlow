@@ -26,6 +26,7 @@ export default function Signup() {
     if (code) {
       setReferralCode(code);
       setIsReferralDisabled(true);
+      localStorage.setItem("pendingReferralCode", code);
     }
   }, []);
 
